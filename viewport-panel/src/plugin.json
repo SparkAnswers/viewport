@@ -5,7 +5,7 @@
   "info": {
     "links": [
       { "name": "GitHub", "url": "https://github.com/SparkAnswers/viewport" },
-      { "name": "Documentation", "url": "https://github.com/SparkAnswers/README.md" },
+      { "name": "Documentation", "url": "https://github.com/SparkAnswers/viewport/blob/main/README.md" },
       { "name": "Issues", "url": "https://github.com/SparkAnswers/viewport/issues" }
     ],
     "description": "Embed live VNC, RDP, and SSH remote desktop sessions directly in your Grafana dashboards. Connect to servers, view live sessions, and take control — all without leaving your dashboard.",
