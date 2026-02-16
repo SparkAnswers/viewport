@@ -39,12 +39,15 @@ jobs:
         run: npm run build
 
       - name: Package plugin
+        working-directory: .
         run: |
-          mv dist viewport-panel
-          zip -r viewport-panel-${{ github.ref_name }}.zip viewport-panel/
+          mkdir -p packaging/viewport-panel
+          cp -r viewport-panel/dist/* packaging/viewport-panel/
+          cd packaging
+          zip -r ../viewport-panel-${{ github.ref_name }}.zip viewport-panel/
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          files: viewport-panel/viewport-panel-${{ github.ref_name }}.zip
+          files: viewport-panel-${{ github.ref_name }}.zip
           generate_release_notes: true
