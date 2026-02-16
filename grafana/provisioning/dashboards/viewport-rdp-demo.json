@@ -1,0 +1,153 @@
+{
+  "annotations": {
+    "list": []
+  },
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 0,
+  "id": null,
+  "links": [],
+  "panels": [
+    {
+      "id": 1,
+      "title": "Console",
+      "type": "viewport-panel",
+      "gridPos": { "h": 12, "w": 14, "x": 0, "y": 0 },
+      "options": {
+        "connectionType": "rdp",
+        "guacamoleUrl": "/guacamole",
+        "guacamoleUsername": "guacadmin",
+        "guacamolePassword": "guacadmin",
+        "host": "test-target-rdp",
+        "port": 3389,
+        "username": "testuser",
+        "password": "testpass",
+        "domain": "",
+        "colorDepth": 24,
+        "sshPrivateKey": "",
+        "autoConnect": true,
+        "readOnly": false,
+        "security": "rdp",
+        "ignoreCert": true
+      },
+      "fieldConfig": {
+        "defaults": {},
+        "overrides": []
+      }
+    },
+    {
+      "id": 2,
+      "title": "New panel",
+      "type": "text",
+      "gridPos": { "h": 12, "w": 10, "x": 14, "y": 0 },
+      "options": {
+        "mode": "markdown",
+        "content": "## Placeholder\n\nAdditional monitoring panel — replace with a real data source.",
+        "code": { "language": "plaintext", "showLineNumbers": false, "showMiniMap": false }
+      },
+      "fieldConfig": {
+        "defaults": {},
+        "overrides": []
+      }
+    },
+    {
+      "id": 3,
+      "title": "CPU Utilization",
+      "type": "text",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 12 },
+      "options": {
+        "mode": "markdown",
+        "content": "### CPU Utilization\n\n_Connect a Prometheus/InfluxDB datasource to populate this panel._",
+        "code": { "language": "plaintext", "showLineNumbers": false, "showMiniMap": false }
+      },
+      "fieldConfig": {
+        "defaults": {},
+        "overrides": []
+      }
+    },
+    {
+      "id": 4,
+      "title": "Memory Utilization",
+      "type": "text",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 12 },
+      "options": {
+        "mode": "markdown",
+        "content": "### Memory Utilization\n\n_Connect a Prometheus/InfluxDB datasource to populate this panel._",
+        "code": { "language": "plaintext", "showLineNumbers": false, "showMiniMap": false }
+      },
+      "fieldConfig": {
+        "defaults": {},
+        "overrides": []
+      }
+    },
+    {
+      "id": 5,
+      "title": "File System",
+      "type": "text",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 20 },
+      "options": {
+        "mode": "markdown",
+        "content": "### File System\n\n_Connect a Prometheus/InfluxDB datasource to populate this panel._",
+        "code": { "language": "plaintext", "showLineNumbers": false, "showMiniMap": false }
+      },
+      "fieldConfig": {
+        "defaults": {},
+        "overrides": []
+      }
+    },
+    {
+      "id": 6,
+      "title": "Disk Latency",
+      "type": "text",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 20 },
+      "options": {
+        "mode": "markdown",
+        "content": "### Disk Latency\n\n_Connect a Prometheus/InfluxDB datasource to populate this panel._",
+        "code": { "language": "plaintext", "showLineNumbers": false, "showMiniMap": false }
+      },
+      "fieldConfig": {
+        "defaults": {},
+        "overrides": []
+      }
+    },
+    {
+      "id": 7,
+      "title": "Disk Bandwidth",
+      "type": "text",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 28 },
+      "options": {
+        "mode": "markdown",
+        "content": "### Disk Bandwidth\n\n_Connect a Prometheus/InfluxDB datasource to populate this panel._",
+        "code": { "language": "plaintext", "showLineNumbers": false, "showMiniMap": false }
+      },
+      "fieldConfig": {
+        "defaults": {},
+        "overrides": []
+      }
+    },
+    {
+      "id": 8,
+      "title": "Network Bandwidth",
+      "type": "text",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 28 },
+      "options": {
+        "mode": "markdown",
+        "content": "### Network Bandwidth\n\n_Connect a Prometheus/InfluxDB datasource to populate this panel._",
+        "code": { "language": "plaintext", "showLineNumbers": false, "showMiniMap": false }
+      },
+      "fieldConfig": {
+        "defaults": {},
+        "overrides": []
+      }
+    }
+  ],
+  "schemaVersion": 39,
+  "tags": ["viewport", "rdp", "console"],
+  "templating": { "list": [] },
+  "time": { "from": "now-3d", "to": "now" },
+  "timepicker": {},
+  "timezone": "",
+  "title": "Server 456 - RDP Console",
+  "uid": "viewport-rdp-demo",
+  "version": 1
+}

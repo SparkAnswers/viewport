@@ -1,0 +1,27 @@
+{
+  "type": "panel",
+  "name": "Viewport",
+  "id": "viewport-panel",
+  "info": {
+    "description": "Embed live VNC, RDP, and SSH remote desktop sessions directly in your Grafana dashboards. Connect to servers, view live sessions, and take control — all without leaving your dashboard.",
+    "author": {
+      "name": "Viewport"
+    },
+    "keywords": ["vnc", "rdp", "ssh", "remote", "guacamole"],
+    "logos": {
+      "small": "img/logo.svg",
+      "large": "img/logo.svg"
+    },
+    "screenshots": [
+      { "name": "RDP Console - Live Connection", "path": "img/rdp-real-dashboard.png" },
+      { "name": "RDP Dashboard", "path": "img/rdp-dashboard.png" },
+      { "name": "VNC Dashboard", "path": "img/vnc-dashboard.png" }
+    ],
+    "version": "1.0.0",
+    "updated": "2026-02-15"
+  },
+  "dependencies": {
+    "grafanaDependency": ">=10.0.0",
+    "plugins": []
+  }
+}

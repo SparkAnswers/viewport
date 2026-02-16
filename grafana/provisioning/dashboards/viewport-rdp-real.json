@@ -1,0 +1,78 @@
+{
+  "annotations": {
+    "list": []
+  },
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 0,
+  "id": null,
+  "links": [],
+  "panels": [
+    {
+      "id": 1,
+      "title": "RDP Console - 192.168.1.137",
+      "type": "viewport-panel",
+      "gridPos": { "h": 16, "w": 18, "x": 0, "y": 0 },
+      "options": {
+        "connectionType": "rdp",
+        "guacamoleUrl": "/guacamole",
+        "guacamoleUsername": "guacadmin",
+        "guacamolePassword": "guacadmin",
+        "host": "192.168.1.137",
+        "port": 3389,
+        "username": "james",
+        "password": "claudeme",
+        "domain": "",
+        "colorDepth": 24,
+        "sshPrivateKey": "",
+        "autoConnect": true,
+        "readOnly": false,
+        "security": "any",
+        "ignoreCert": true
+      },
+      "fieldConfig": {
+        "defaults": {},
+        "overrides": []
+      }
+    },
+    {
+      "id": 2,
+      "title": "Connection Details",
+      "type": "text",
+      "gridPos": { "h": 8, "w": 6, "x": 18, "y": 0 },
+      "options": {
+        "mode": "markdown",
+        "content": "## Connection Info\n\n| Property | Value |\n|----------|-------|\n| **Host** | 192.168.1.137 |\n| **Port** | 3389 |\n| **Protocol** | RDP |\n| **Security** | NLA (negotiate) |\n| **OS** | Ubuntu 24.04 |\n| **RDP Server** | gnome-remote-desktop |\n\n---\n\n*Auto-connect enabled. Double-click the console to enter fullscreen.*",
+        "code": { "language": "plaintext", "showLineNumbers": false, "showMiniMap": false }
+      },
+      "fieldConfig": {
+        "defaults": {},
+        "overrides": []
+      }
+    },
+    {
+      "id": 3,
+      "title": "Status",
+      "type": "text",
+      "gridPos": { "h": 8, "w": 6, "x": 18, "y": 8 },
+      "options": {
+        "mode": "markdown",
+        "content": "## RDP Proof of Concept\n\nThis dashboard demonstrates a live RDP connection to a **real Ubuntu 24.04 machine** at `192.168.1.137` using the built-in gnome-remote-desktop server.\n\n### Architecture\n```\nBrowser -> Grafana -> Guacamole -> RDP -> 192.168.1.137\n```\n\nThe Viewport plugin streams the remote desktop session directly into this Grafana panel via Apache Guacamole's WebSocket tunnel.",
+        "code": { "language": "plaintext", "showLineNumbers": false, "showMiniMap": false }
+      },
+      "fieldConfig": {
+        "defaults": {},
+        "overrides": []
+      }
+    }
+  ],
+  "schemaVersion": 39,
+  "tags": ["viewport", "rdp", "console", "proof"],
+  "templating": { "list": [] },
+  "time": { "from": "now-3d", "to": "now" },
+  "timepicker": {},
+  "timezone": "",
+  "title": "RDP Console - 192.168.1.137",
+  "uid": "viewport-rdp-real",
+  "version": 1
+}
