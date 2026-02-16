@@ -1,7 +1,7 @@
 {
   "type": "panel",
   "name": "Viewport",
-  "id": "viewport-panel",
+  "id": "sparkanswers-viewport-panel",
   "info": {
     "links": [
       { "name": "GitHub", "url": "https://github.com/SparkAnswers/viewport" },

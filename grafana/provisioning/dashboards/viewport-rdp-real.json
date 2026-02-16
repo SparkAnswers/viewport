@@ -11,7 +11,7 @@
     {
       "id": 1,
       "title": "RDP Console - 192.168.1.137",
-      "type": "viewport-panel",
+      "type": "sparkanswers-viewport-panel",
       "gridPos": { "h": 16, "w": 18, "x": 0, "y": 0 },
       "options": {
         "connectionType": "rdp",
