@@ -1,8 +1,10 @@
 {
   "ts-node": {
     "compilerOptions": {
-      "module": "commonjs"
-    }
+      "module": "commonjs",
+      "noImplicitAny": false
+    },
+    "files": true
   },
   "compilerOptions": {
     "declaration": true,

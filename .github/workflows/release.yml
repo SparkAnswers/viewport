@@ -43,6 +43,8 @@ jobs:
         run: |
           mkdir -p packaging/sparkanswers-viewport-panel
           cp -r viewport-panel/dist/* packaging/sparkanswers-viewport-panel/
+          cp LICENSE packaging/sparkanswers-viewport-panel/ 2>/dev/null || true
+          cp CHANGELOG.md packaging/sparkanswers-viewport-panel/ 2>/dev/null || true
           cd packaging
           zip -r ../sparkanswers-viewport-panel-${{ github.ref_name }}.zip sparkanswers-viewport-panel/
 
