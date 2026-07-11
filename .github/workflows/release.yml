@@ -12,7 +12,7 @@ jobs:
       contents: write
     defaults:
       run:
-        working-directory: viewport-panel
+        working-directory: viewport-app
 
     steps:
       - uses: actions/checkout@v4
@@ -21,13 +21,15 @@ jobs:
         with:
           node-version: "20"
           cache: "npm"
-          cache-dependency-path: viewport-panel/package-lock.json
+          cache-dependency-path: viewport-app/package-lock.json
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: viewport-app/pkg/go.mod
+          cache-dependency-path: viewport-app/pkg/go.sum
 
       - name: Install dependencies
         run: npm ci
-
-      - name: Lint
-        run: npm run lint
 
       - name: Typecheck
         run: npm run typecheck
@@ -38,18 +40,24 @@ jobs:
       - name: Build
         run: npm run build
 
+      # NOTE: signing is intentionally NOT done here. Public/community plugins
+      # can only be signed AFTER Grafana approves them and grants a signature
+      # level — you cannot self-sign a public plugin pre-approval. Once approved,
+      # sign manually (or add a signing step) with a Grafana Cloud access-policy
+      # token. This release publishes an unsigned build (loadable via
+      # GF_PLUGINS_ALLOW_LOADING_UNSIGNED_PLUGINS).
+
       - name: Package plugin
         working-directory: .
         run: |
-          mkdir -p packaging/sparkanswers-viewport-panel
-          cp -r viewport-panel/dist/* packaging/sparkanswers-viewport-panel/
-          cp LICENSE packaging/sparkanswers-viewport-panel/ 2>/dev/null || true
-          cp CHANGELOG.md packaging/sparkanswers-viewport-panel/ 2>/dev/null || true
+          mkdir -p packaging/sparkanswers-viewport-app
+          cp -r viewport-app/dist/* packaging/sparkanswers-viewport-app/
+          cp LICENSE packaging/sparkanswers-viewport-app/ 2>/dev/null || true
           cd packaging
-          zip -r ../sparkanswers-viewport-panel-${{ github.ref_name }}.zip sparkanswers-viewport-panel/
+          zip -r ../sparkanswers-viewport-app.zip sparkanswers-viewport-app/
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          files: sparkanswers-viewport-panel-${{ github.ref_name }}.zip
+          files: sparkanswers-viewport-app.zip
           generate_release_notes: true

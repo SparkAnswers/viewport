@@ -1,0 +1,54 @@
+apiVersion: 1
+
+apps:
+  - type: sparkanswers-viewport-app
+    org_id: 1
+    disabled: false
+    jsonData:
+      guacamoleUrl: http://guacamole:8080/guacamole
+      clientUrl: /guacamole
+      connections:
+        - name: test-vnc
+          protocol: vnc
+          host: test-target
+          port: 5900
+          colorDepth: 24
+        - name: test-rdp
+          protocol: rdp
+          host: test-target-rdp
+          port: 3389
+          username: testuser
+          security: rdp
+          ignoreCert: true
+        # Prompt mode: no stored password — each user is asked for credentials
+        # at connect time and they are never persisted anywhere.
+        - name: test-rdp-prompt
+          protocol: rdp
+          host: test-target-rdp
+          port: 3389
+          security: rdp
+          ignoreCert: true
+          credentialMode: prompt
+        - name: ubuntu-desktop
+          protocol: rdp
+          host: 192.168.1.137
+          port: 3389
+          username: james
+          security: any
+          ignoreCert: true
+      profiles:
+        # Shared credential usable across a fleet of hosts. Panels in "host"
+        # mode pass just the hostname (e.g. from a dashboard variable) and the
+        # profile supplies protocol, port, and the credential.
+        - name: linux-vnc
+          protocol: vnc
+          port: 5900
+          colorDepth: 24
+          allowedHosts:
+            - "test-target*"
+    secureJsonData:
+      jsonSecretKey: $__env{JSON_SECRET_KEY}
+      password.test-vnc: testpass
+      password.test-rdp: testpass
+      password.ubuntu-desktop: $__env{UBUNTU_RDP_PASSWORD}
+      profilePassword.linux-vnc: testpass

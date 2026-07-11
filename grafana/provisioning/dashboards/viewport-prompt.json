@@ -1,0 +1,48 @@
+{
+  "annotations": { "list": [] },
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 0,
+  "id": null,
+  "links": [],
+  "panels": [
+    {
+      "id": 1,
+      "title": "RDP Console (asks for your credentials)",
+      "type": "sparkanswers-viewport-panel",
+      "gridPos": { "h": 14, "w": 16, "x": 0, "y": 0 },
+      "options": {
+        "mode": "connection",
+        "connection": "test-rdp-prompt",
+        "host": "",
+        "port": 0,
+        "profile": "",
+        "autoConnect": false,
+        "readOnly": false
+      },
+      "fieldConfig": { "defaults": {}, "overrides": [] }
+    },
+    {
+      "id": 2,
+      "title": "How this works",
+      "type": "text",
+      "gridPos": { "h": 14, "w": 8, "x": 16, "y": 0 },
+      "options": {
+        "mode": "markdown",
+        "content": "## Prompt-mode credentials\n\nThe `test-rdp-prompt` connection is configured with **credentialMode: prompt** — no password is stored anywhere.\n\nClick **Connect** in the panel toolbar: Viewport asks for your username and password, uses them once to broker the session server-side, and keeps them only in the panel's memory for this browser session.\n\nFor the demo container use `testuser` / `testpass`.",
+        "code": { "language": "plaintext", "showLineNumbers": false, "showMiniMap": false }
+      },
+      "fieldConfig": { "defaults": {}, "overrides": [] }
+    }
+  ],
+  "preload": false,
+  "refresh": "",
+  "schemaVersion": 41,
+  "tags": ["viewport", "demo"],
+  "time": { "from": "now-6h", "to": "now" },
+  "timepicker": {},
+  "timezone": "browser",
+  "title": "Prompt Credentials - RDP Console",
+  "uid": "viewport-prompt",
+  "version": 1
+}
