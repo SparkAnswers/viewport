@@ -161,19 +161,23 @@ export const ViewportPanel: React.FC<Props> = ({ options, width, height, replace
   }, []);
 
   // When the resolved target changes, drop the old session and any prompted
-  // credentials so a different host/connection starts clean.
+  // credentials so a different host/connection starts clean. Resetting state in
+  // this effect is intentional (a target change is an external input).
   useEffect(() => {
+    /* eslint-disable react-hooks/set-state-in-effect */
     credsRef.current = null;
     setTunnelUrl('');
     setConnectString('');
     setCredPrompt(null);
     setErrorMessage('');
     setConnectionState(ConnectionState.Disconnected);
+    /* eslint-enable react-hooks/set-state-in-effect */
   }, [targetKey]);
 
   // Auto-connect on load and reconnect when the resolved target changes.
   useEffect(() => {
     if (options.autoConnect && hasTarget) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       doConnect();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
