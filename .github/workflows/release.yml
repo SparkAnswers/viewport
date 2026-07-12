@@ -1,43 +1,65 @@
-# This GitHub Action automates the process of building Grafana plugins.
-# (For more information, see https://github.com/grafana/plugin-actions/blob/main/build-plugin/README.md)
+# Builds and publishes a GitHub release for a version tag (e.g. v2.2.0).
+# Token-free: builds the frontend (standard webpack) + backend (mage, all
+# platforms), packages an unsigned plugin zip, and attaches it + its SHA1 to the
+# release. Signing is a post-approval step (see docs/PUBLISHING).
 name: Release
 
 on:
   push:
     tags:
-      - 'v*' # Run workflow on version tags, e.g. v1.0.0.
+      - 'v*'
 
-permissions: read-all
+permissions:
+  contents: write
 
 jobs:
   release:
-    permissions:
-      contents: write
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
         with:
-          persist-credentials: false
+          node-version: '20'
+          cache: 'npm'
 
-      - uses: grafana/plugin-actions/build-plugin@build-plugin/v1.0.2
-        # Uncomment to enable plugin signing
-        # (For more info on how to generate the access policy token see https://grafana.com/developers/plugin-tools/publish-a-plugin/sign-a-plugin#generate-an-access-policy-token)
-        #with:
-        # Make sure to save the token in your repository secrets
-        #policy_token: $
-        # Usage of GRAFANA_API_KEY is deprecated, prefer `policy_token` option above
-        #grafana_token: $
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
 
-      # Also publish a stable-named asset (sparkanswers-viewport-app.zip) so the
-      # demo docker-compose can pull it via /releases/latest/download/. This is
-      # for the reference stack only; catalog submission uses the versioned,
-      # provenance-attested asset produced by build-plugin above.
-      - name: Publish stable-named asset for the demo stack
-        env:
-          GH_TOKEN: ${{ github.token }}
+      - name: Install mage
+        run: go install github.com/magefile/mage@latest
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build frontend
+        run: npm run build
+
+      - name: Build backend (all platforms)
+        run: mage -v buildAll
+
+      - name: Package plugin
+        id: package
         run: |
-          rm -rf pkg-stable && mkdir -p pkg-stable/sparkanswers-viewport-app
-          cp -r dist/* pkg-stable/sparkanswers-viewport-app/
-          chmod 755 pkg-stable/sparkanswers-viewport-app/gpx_viewport_* || true
-          (cd pkg-stable && zip -qr ../sparkanswers-viewport-app.zip sparkanswers-viewport-app)
-          gh release upload "${{ github.ref_name }}" sparkanswers-viewport-app.zip --clobber
+          version="${GITHUB_REF_NAME#v}"
+          chmod 755 dist/gpx_viewport_* || true
+          rm -rf pkg-out && mkdir -p pkg-out/sparkanswers-viewport-app
+          cp -r dist/* pkg-out/sparkanswers-viewport-app/
+          # stable name (used by the demo docker-compose via /releases/latest/download)
+          (cd pkg-out && zip -qr ../sparkanswers-viewport-app.zip sparkanswers-viewport-app)
+          # versioned name + SHA1 (used for catalog submission)
+          cp sparkanswers-viewport-app.zip "sparkanswers-viewport-app-${version}.zip"
+          sha1sum "sparkanswers-viewport-app-${version}.zip" | cut -d' ' -f1 > "sparkanswers-viewport-app-${version}.zip.sha1"
+          echo "sha1=$(cat sparkanswers-viewport-app-${version}.zip.sha1)" >> "$GITHUB_OUTPUT"
+
+      - name: Create release
+        uses: softprops/action-gh-release@v2
+        with:
+          generate_release_notes: true
+          body: |
+            Unsigned plugin build. SHA1: `${{ steps.package.outputs.sha1 }}`
+          files: |
+            sparkanswers-viewport-app.zip
+            sparkanswers-viewport-app-*.zip
+            sparkanswers-viewport-app-*.zip.sha1
