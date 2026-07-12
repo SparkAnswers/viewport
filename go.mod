@@ -1,6 +1,12 @@
 module github.com/sparkanswers/viewport
 
-go 1.26.5
+go 1.26.4
+
+// The go directive matches the plugin SDK and Grafana's validator runner so its
+// GOTOOLCHAIN=local govulncheck scan can load the packages. The toolchain
+// directive upgrades any GOTOOLCHAIN=auto environment (CI, dev, users) to
+// 1.26.5, which patches GO-2026-5856 (crypto/tls) — the only stdlib finding.
+toolchain go1.26.5
 
 require github.com/grafana/grafana-plugin-sdk-go v0.292.2
 
