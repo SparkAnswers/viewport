@@ -1,0 +1,23 @@
+{
+  "$schema": "https://raw.githubusercontent.com/grafana/grafana/main/docs/sources/developers/plugins/plugin.schema.json",
+  "type": "panel",
+  "name": "Viewport",
+  "id": "sparkanswers-viewport-panel",
+  "info": {
+    "description": "Live VNC, RDP, and SSH console panel. Bundled with the Viewport app plugin, which manages connections and credentials securely.",
+    "author": {
+      "name": "SparkAnswers"
+    },
+    "keywords": ["vnc", "rdp", "ssh", "remote", "guacamole", "console"],
+    "logos": {
+      "small": "img/logo.svg",
+      "large": "img/logo.svg"
+    },
+    "version": "%VERSION%",
+    "updated": "%TODAY%"
+  },
+  "dependencies": {
+    "grafanaDependency": ">=10.4.0",
+    "plugins": []
+  }
+}

@@ -1,0 +1,52 @@
+{
+  "$schema": "https://raw.githubusercontent.com/grafana/grafana/main/docs/sources/developers/plugins/plugin.schema.json",
+  "type": "app",
+  "name": "Viewport",
+  "id": "sparkanswers-viewport-app",
+  "backend": true,
+  "executable": "gpx_viewport",
+  "info": {
+    "description": "Embed live VNC, RDP, and SSH remote desktop sessions directly in your Grafana dashboards. Connections and credentials are managed centrally and stored encrypted; the bundled Viewport panel never sees a password.",
+    "author": {
+      "name": "SparkAnswers"
+    },
+    "keywords": ["vnc", "rdp", "ssh", "remote", "guacamole", "console"],
+    "links": [
+      { "name": "GitHub", "url": "https://github.com/SparkAnswers/viewport" },
+      { "name": "Documentation", "url": "https://github.com/SparkAnswers/viewport/blob/main/README.md" },
+      { "name": "Issues", "url": "https://github.com/SparkAnswers/viewport/issues" }
+    ],
+    "logos": {
+      "small": "img/logo.svg",
+      "large": "img/logo.svg"
+    },
+    "screenshots": [
+      { "name": "VNC Dashboard - Live Session", "path": "img/vnc-dashboard.png" },
+      { "name": "RDP Dashboard - Live XFCE Desktop", "path": "img/rdp-dashboard.png" },
+      { "name": "Fleet Drill-Down - Host from Dashboard Variable", "path": "img/fleet-dashboard.png" },
+      { "name": "Prompt-Mode Credentials", "path": "img/prompt-dashboard.png" },
+      { "name": "Fullscreen with Keyboard Input", "path": "img/fullscreen-input.png" }
+    ],
+    "version": "%VERSION%",
+    "updated": "%TODAY%"
+  },
+  "includes": [
+    {
+      "type": "page",
+      "icon": "cog",
+      "name": "Configuration",
+      "path": "/plugins/%PLUGIN_ID%",
+      "role": "Admin",
+      "addToNav": true
+    },
+    {
+      "type": "panel",
+      "name": "Viewport",
+      "path": "panel/plugin.json"
+    }
+  ],
+  "dependencies": {
+    "grafanaDependency": ">=10.4.0",
+    "plugins": []
+  }
+}

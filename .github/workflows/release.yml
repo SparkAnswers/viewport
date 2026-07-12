@@ -1,63 +1,43 @@
+# This GitHub Action automates the process of building Grafana plugins.
+# (For more information, see https://github.com/grafana/plugin-actions/blob/main/build-plugin/README.md)
 name: Release
 
 on:
   push:
     tags:
-      - "v*"
+      - 'v*' # Run workflow on version tags, e.g. v1.0.0.
+
+permissions: read-all
 
 jobs:
   release:
-    runs-on: ubuntu-latest
     permissions:
       contents: write
-    defaults:
-      run:
-        working-directory: viewport-app
-
+    runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v6
         with:
-          node-version: "20"
-          cache: "npm"
-          cache-dependency-path: viewport-app/package-lock.json
+          persist-credentials: false
 
-      - uses: actions/setup-go@v5
-        with:
-          go-version-file: viewport-app/pkg/go.mod
-          cache-dependency-path: viewport-app/pkg/go.sum
+      - uses: grafana/plugin-actions/build-plugin@build-plugin/v1.0.2
+        # Uncomment to enable plugin signing
+        # (For more info on how to generate the access policy token see https://grafana.com/developers/plugin-tools/publish-a-plugin/sign-a-plugin#generate-an-access-policy-token)
+        #with:
+        # Make sure to save the token in your repository secrets
+        #policy_token: $
+        # Usage of GRAFANA_API_KEY is deprecated, prefer `policy_token` option above
+        #grafana_token: $
 
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Typecheck
-        run: npm run typecheck
-
-      - name: Test
-        run: npm test
-
-      - name: Build
-        run: npm run build
-
-      # NOTE: signing is intentionally NOT done here. Public/community plugins
-      # can only be signed AFTER Grafana approves them and grants a signature
-      # level — you cannot self-sign a public plugin pre-approval. Once approved,
-      # sign manually (or add a signing step) with a Grafana Cloud access-policy
-      # token. This release publishes an unsigned build (loadable via
-      # GF_PLUGINS_ALLOW_LOADING_UNSIGNED_PLUGINS).
-
-      - name: Package plugin
-        working-directory: .
+      # Also publish a stable-named asset (sparkanswers-viewport-app.zip) so the
+      # demo docker-compose can pull it via /releases/latest/download/. This is
+      # for the reference stack only; catalog submission uses the versioned,
+      # provenance-attested asset produced by build-plugin above.
+      - name: Publish stable-named asset for the demo stack
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
-          mkdir -p packaging/sparkanswers-viewport-app
-          cp -r viewport-app/dist/* packaging/sparkanswers-viewport-app/
-          cp LICENSE packaging/sparkanswers-viewport-app/ 2>/dev/null || true
-          cd packaging
-          zip -r ../sparkanswers-viewport-app.zip sparkanswers-viewport-app/
-
-      - name: Create GitHub Release
-        uses: softprops/action-gh-release@v2
-        with:
-          files: sparkanswers-viewport-app.zip
-          generate_release_notes: true
+          rm -rf pkg-stable && mkdir -p pkg-stable/sparkanswers-viewport-app
+          cp -r dist/* pkg-stable/sparkanswers-viewport-app/
+          chmod 755 pkg-stable/sparkanswers-viewport-app/gpx_viewport_* || true
+          (cd pkg-stable && zip -qr ../sparkanswers-viewport-app.zip sparkanswers-viewport-app)
+          gh release upload "${{ github.ref_name }}" sparkanswers-viewport-app.zip --clobber
