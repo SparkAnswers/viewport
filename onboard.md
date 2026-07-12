@@ -4,25 +4,39 @@ Welcome! This guide will get you from zero to a running Viewport development env
 
 ## How It Works — Why Guacamole?
 
-You might wonder: why does this project need Apache Guacamole? Can't we just connect to remote machines directly from the browser?
-
-**The short answer: no.** Browsers can only make HTTP and WebSocket connections. They cannot speak VNC, RDP, or SSH — those are low-level network protocols that require a native client. So there must be a server-side component that:
+Browsers can only make HTTP and WebSocket connections — they cannot speak VNC, RDP, or SSH. There must be a server-side component that:
 
 1. **Connects** to target machines using their native protocol (VNC, RDP, or SSH)
 2. **Translates** the remote display into a WebSocket stream the browser can consume
 3. **Relays** keyboard and mouse input back to the target machine
 
-Guacamole's `guacd` daemon does exactly this. The Grafana plugin talks to Guacamole over WebSockets, and Guacamole talks to your servers over VNC/RDP/SSH. The user never needs to install anything — it all runs in the browser.
+Guacamole's `guacd` daemon does exactly this. The user never needs to install anything — it all runs in the browser.
+
+## Why an App Plugin?
+
+Viewport v1 was a panel plugin with credentials in panel options. Grafana's plugin review rejected that: panel options are saved unencrypted in dashboard JSON. Viewport v2 is an **app plugin**:
 
 ```
-Your Browser  <--WebSocket-->  Guacamole (guacd)  <--VNC/RDP/SSH-->  Remote Servers
+Browser (panel)  ──▶  Grafana  ──resource API──▶  Viewport backend (Go)
+                                                     │ mints scoped session token
+                                                     ▼
+Browser (panel)  ──WebSocket tunnel──▶  Guacamole  ──VNC/RDP/SSH──▶  targets
 ```
+
+- Admins define **named connections** on the app configuration page; secrets live in Grafana's encrypted `secureJsonData` and are decrypted only by the Go backend.
+- The bundled **Viewport panel** references connections by name — it has no credential options.
+- At connect time, the backend exchanges the connection definition (signed + encrypted with the shared `JSON_SECRET_KEY`) for a short-lived Guacamole token scoped to that single connection.
+
+Full details: [viewport-app/ARCHITECTURE.md](viewport-app/ARCHITECTURE.md).
 
 ## Prerequisites
 
-- Docker and Docker Compose installed
+- Docker and Docker Compose
 - Node.js 18+ and npm
-- A code editor (VS Code recommended)
+- Go 1.24+ (for the plugin backend). The grafana-plugin-sdk-go version pinned in
+  `pkg/go.mod` requires Go >= 1.26; Go's automatic toolchain download handles
+  this transparently, but it needs internet access at build time and fails if
+  `GOTOOLCHAIN=local` is set — install Go 1.26+ directly in locked-down CI.
 
 ## Step 1: Clone and Install
 
@@ -30,8 +44,7 @@ Your Browser  <--WebSocket-->  Guacamole (guacd)  <--VNC/RDP/SSH-->  Remote Serv
 git clone <repo-url>
 cd viewport
 
-# Install plugin dependencies
-cd viewport-panel
+cd viewport-app
 npm install
 cd ..
 ```
@@ -39,21 +52,23 @@ cd ..
 ## Step 2: Build the Plugin
 
 ```bash
-cd viewport-panel
-npm run build    # production build -> dist/
-# OR
-npm run dev      # watch mode for development
+cd viewport-app
+npm run build            # frontend (webpack) + backend (go build) -> dist/
+# OR, individually:
+npm run build:frontend
+npm run build:backend
+npm run dev              # webpack watch mode (frontend only)
 ```
 
-The build output goes to `viewport-panel/dist/`, which is volume-mounted into the Grafana container.
+The build output goes to `viewport-app/dist/`, which is volume-mounted into the Grafana container. `dist/` contains the app plugin at the root, the nested panel plugin in `panel/`, and the backend binary `gpx_viewport_linux_amd64`.
 
 ## Step 3: Start the Stack
 
 ```bash
-docker-compose up -d
+docker compose up -d
 ```
 
-This starts 5 containers:
+This starts 7 containers:
 
 | Service | URL | Credentials |
 |---------|-----|-------------|
@@ -62,146 +77,130 @@ This starts 5 containers:
 | Guacamole | http://localhost/guacamole/ | guacadmin / guacadmin |
 | PostgreSQL | localhost:5432 | guacamole_user / guacamole_pass |
 | guacd | localhost:4822 | - |
+| test-target (VNC) | localhost:5900 | password: testpass |
+| test-target-rdp (RDP) | localhost:3389 | testuser / testpass |
 
 ## Step 4: Verify Everything Works
 
 1. Open http://localhost/grafana/ and log in with `admin` / `admin`
-2. Create a new dashboard
-3. Add a panel and search for "Viewport" in the panel type list
-4. The plugin should appear - you're good to go!
+2. The Viewport app and demo connections are pre-provisioned (`grafana/provisioning/plugins/viewport.yaml`)
+3. Open the provisioned "Viewport VNC Demo" dashboard — the panel should auto-connect to the test VNC server
+4. Double-click the panel to go fullscreen, press Escape to minimize
 
-## Step 5: Configure a Test Connection
+## Step 5: Configure Your Own Connection
 
-A test VNC server is included in the stack (`test-target` service). To test:
+1. Go to **Administration → Plugins → Viewport → Configuration**
+2. Check the Guacamole server settings (URL, client URL, JSON secret key)
+3. Add a connection: name, protocol, host, port, credentials
+4. Save — then reference the connection by name in any Viewport panel
 
-1. In your Viewport panel settings, set:
-   - **Connection Type**: VNC
-   - **Guacamole URL**: `http://guacamole:8080/guacamole`
-   - **Host**: `test-target`
-   - **Port**: `5900`
-   - **Password**: `testpass`
-2. Click "Connect" in the toolbar
-3. You should see the test desktop rendered in the panel
-4. Double-click to go fullscreen, press Escape to minimize
+## Credential Modes (v2.1)
+
+Viewport supports three ways to supply credentials, all compatible with the
+original stored-password behavior:
+
+| Mode | Where the credential lives | Use it for |
+|------|----------------------------|------------|
+| **Stored** (default) | encrypted `secureJsonData` per connection | a fixed machine with a service account |
+| **Credential profile** | one shared credential (`profilePassword.<name>`), reusable across hosts, with an `allowedHosts` glob allowlist | a fleet of like-configured machines |
+| **Prompt** | nowhere — asked from the user per session, kept only in panel memory | shared dashboards where each viewer uses their own login |
+
+**Fleet drill-down pattern** — set a panel to **Host mode**, point Host at a
+dashboard variable (`${server}`), and pick a credential profile. A dropdown of
+machines then drives which host the panel connects to; the profile supplies the
+protocol and credential. See the provisioned "Fleet Drill-Down" dashboard.
+
+**Prompt pattern** — set a connection's credential mode to Prompt (or enable
+"Prompt credentials" on a profile). The backend answers `POST /session` with
+HTTP 428 when it has no password, and the panel opens a credential dialog, then
+retries with what the user typed. Nothing is persisted. See the provisioned
+"Prompt Credentials" dashboard. Demo login for the RDP test container:
+`testuser` / `testpass`.
+
+The backend logic for all three modes lives in
+`viewport-app/pkg/plugin/resolve.go`
+(`resolveConnection` / `resolveDynamic` / `applyPrompt` / `hostAllowed`).
 
 ## Project Structure
 
 ```
 viewport/
 ├── docker-compose.yml          # All services defined here
-├── .env                        # Environment variables (credentials, URLs)
+├── .env                        # Environment variables (credentials, URLs, JSON_SECRET_KEY)
 ├── nginx/
 │   └── nginx.conf              # Reverse proxy config
-├── db/
-│   └── init/
-│       └── initdb.sql          # Guacamole PostgreSQL schema
-├── test-target/
-│   └── Dockerfile              # Test VNC server for development
-├── viewport-panel/             # The Grafana plugin
+├── db/init/initdb.sql          # Guacamole PostgreSQL schema
+├── test-target/                # Test VNC server container
+├── test-target-rdp/            # Test RDP server container
+├── grafana/provisioning/
+│   ├── plugins/viewport.yaml   # App settings + demo connections
+│   └── dashboards/             # Demo dashboards
+├── viewport-app/               # The Grafana app plugin
+│   ├── ARCHITECTURE.md         # Design contract — read this first
 │   ├── src/
-│   │   ├── module.ts           # Plugin entry point + options editor
-│   │   ├── plugin.json         # Plugin metadata
-│   │   ├── components/
-│   │   │   ├── ViewportPanel.tsx      # Main panel (small pane + fullscreen)
-│   │   │   ├── GuacamoleDisplay.tsx   # Remote display renderer
-│   │   │   ├── ConnectionToolbar.tsx  # Connect/Disconnect/Fullscreen buttons
-│   │   │   ├── ConnectionStatus.tsx   # Status indicator dot
-│   │   │   └── CredentialPrompt.tsx   # Login modal
-│   │   ├── services/
-│   │   │   └── GuacamoleService.ts    # Guacamole REST API client
+│   │   ├── plugin.json         # App plugin metadata
+│   │   ├── module.tsx          # App entry (config page registration)
+│   │   ├── panel/              # Nested panel plugin (module.ts + plugin.json)
+│   │   ├── components/         # AppConfig, ViewportPanel, GuacamoleDisplay, ...
+│   │   ├── services/           # BackendService (resource API client)
 │   │   └── types/
-│   │       ├── index.ts               # TypeScript interfaces
-│   │       └── guacamole.d.ts         # guacamole-common-js type defs
-│   ├── tests/                  # Unit tests
-│   ├── package.json
-│   └── tsconfig.json
-├── trello.md                   # Full project plan and task breakdown
+│   ├── pkg/                    # Go backend (session broker)
+│   ├── tests/                  # Frontend unit tests
+│   └── package.json
 ├── project.md                  # Original project requirements
+├── grafannotes.md              # Grafana review feedback that drove the v2 redesign
 └── onboard.md                  # This file
 ```
 
 ## Using Dashboard Variables
 
-The Viewport panel supports Grafana [dashboard variables](https://grafana.com/docs/grafana/latest/dashboards/variables/) in all text-based connection fields. This lets you dynamically populate connection details from dropdowns, query results, or custom variables.
-
-**Supported fields:** Guacamole URL, Host, Username, Password, Domain, SSH Private Key.
-
-### Example Setup
-
-1. In your dashboard, go to **Settings > Variables** and create a variable:
-   - **Name:** `server_ip`
-   - **Type:** Custom
-   - **Values:** `10.0.0.1, 10.0.0.2, 10.0.0.3`
-2. In the Viewport panel options, set **Host** to `${server_ip}`
-3. Now the panel connects to whichever server is selected in the dashboard dropdown
-
-### Common Variable Patterns
-
-| Field | Example Value | Description |
-|-------|--------------|-------------|
-| Host | `${server_ip}` | Select target machine from a dropdown |
-| Username | `${ssh_user}` | Switch between user accounts |
-| Guacamole URL | `http://${guac_host}:8080/guacamole` | Point to different Guacamole instances |
-| Domain | `${ad_domain}` | Switch Active Directory domains for RDP |
-
-Variables are resolved at render time, so changing a dashboard variable immediately updates the panel's connection target. If **Auto Connect** is enabled, the panel will reconnect automatically when variables change.
+The panel's **Connection** option supports template variables. Create a dashboard variable (e.g. `server`) whose values are connection *names* defined in the app configuration, set the panel's Connection to `${server}`, and the panel connects to whichever connection is selected. With **Auto Connect** enabled the panel reconnects automatically when the variable changes.
 
 ## Development Workflow
 
-### Making Plugin Changes
+### Frontend changes
 
-1. Run `npm run dev` in `viewport-panel/` (watches for changes)
-2. Grafana auto-reloads the plugin when dist/ changes
-3. Refresh your browser to see updates
+1. Run `npm run dev` in `viewport-app/` (watches for changes)
+2. Refresh the browser to see updates
+
+### Backend changes
+
+1. `npm run build:backend`
+2. `docker compose restart grafana` (Grafana restarts the plugin process)
 
 ### Running Tests
 
 ```bash
-cd viewport-panel
-npm test                  # Run all tests
-npm test -- --watch       # Watch mode
-npm test -- --coverage    # With coverage report
+cd viewport-app
+npm test                  # frontend (jest) + backend (go test)
+npm run test:frontend
+npm run test:backend
 ```
-
-### Adding a New Component
-
-1. Create the component in `src/components/`
-2. Use `useStyles2` + `css` from `@emotion/css` for styling (matches Grafana patterns)
-3. Use `GrafanaTheme2` for theme-aware colors
-4. Add tests in `tests/`
-
-### Key Patterns Used
-
-- **`PanelPlugin`** from `@grafana/data` for plugin registration
-- **`useStyles2(getStyles)`** for theme-aware CSS-in-JS
-- **`PanelProps<ViewportOptions>`** for typed panel props
-- **`guacamole-common-js`** for direct Guacamole protocol integration (not iframe)
-- **React portals** for fullscreen overlay mode
 
 ## Troubleshooting
 
 **Plugin doesn't appear in Grafana:**
-- Check that `viewport-panel/dist/` exists and contains built files
-- Verify `GF_PLUGINS_ALLOW_LOADING_UNSIGNED_PLUGINS=viewport-panel` is set
-- Restart Grafana: `docker-compose restart grafana`
-- Check logs: `docker-compose logs grafana`
+- Check that `viewport-app/dist/` exists and contains `module.js`, `panel/module.js`, and `gpx_viewport_linux_amd64`
+- Verify `GF_PLUGINS_ALLOW_LOADING_UNSIGNED_PLUGINS=sparkanswers-viewport-app,sparkanswers-viewport-panel`
+- Restart Grafana: `docker compose restart grafana`, check `docker compose logs grafana`
 
-**Guacamole connection fails:**
-- Verify guacd is running: `docker-compose logs guacd`
-- Check Guacamole logs: `docker-compose logs guacamole`
-- Ensure the target host is reachable from the guacd container
-- Try logging into Guacamole directly at http://localhost/guacamole/
+**Panel says the connection failed:**
+- Open the app configuration page and use the health check — it validates settings and Guacamole reachability
+- The JSON secret key in app settings must equal `JSON_SECRET_KEY` on the guacamole container
+- Verify guacd and the target are up: `docker compose logs guacd guacamole`
+
+**RDP test container shows a black screen:**
+- xrdp needs ~30s to tear down the previous session after a disconnect; an immediate
+  reconnect can race it and render black. Wait half a minute and reconnect
+  (`KillDisconnected=true` is already configured so stale sessions are reaped).
 
 **WebSocket errors:**
-- Check Nginx logs: `docker-compose logs nginx`
-- Verify WebSocket upgrade headers in `nginx/nginx.conf`
-- Browser dev tools Network tab -> WS filter to inspect WebSocket frames
+- Check Nginx logs: `docker compose logs nginx`
+- Browser dev tools → Network → WS to inspect WebSocket frames
 
 ## Contributing
 
-1. Check `trello.md` for the task breakdown and pick an unfinished task
-2. Create a feature branch
-3. Write tests first (TDD approach)
-4. Implement the feature
-5. Run `npm test` to verify
-6. Submit a PR with a description of what changed and why
+1. Create a feature branch
+2. Write tests first (TDD approach)
+3. Run `npm test` to verify
+4. Submit a PR with a description of what changed and why

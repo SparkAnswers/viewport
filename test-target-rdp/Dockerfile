@@ -24,6 +24,10 @@ RUN echo "xfce4-session" > /home/testuser/.xsession \
 # Generate xrdp RSA keys
 RUN xrdp-keygen xrdp auto
 
+# Kill disconnected sessions immediately so repeated connections always get a
+# fresh session instead of colliding with a stale one (black screen).
+RUN sed -i 's/^KillDisconnected=false/KillDisconnected=true/' /etc/xrdp/sesman.ini
+
 # Ensure dbus system bus directory exists
 RUN mkdir -p /run/dbus
 

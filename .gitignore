@@ -1,5 +1,6 @@
 node_modules/
-viewport-panel/dist/
-viewport-panel/node_modules/
+viewport-app/dist/
+viewport-app/node_modules/
 *.log
 .DS_Store
+pwd

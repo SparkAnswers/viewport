@@ -1,0 +1,65 @@
+{
+  "annotations": { "list": [] },
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 0,
+  "id": null,
+  "links": [],
+  "templating": {
+    "list": [
+      {
+        "name": "server",
+        "label": "Server",
+        "type": "custom",
+        "query": "test-target, test-target-2",
+        "current": { "text": "test-target", "value": "test-target" },
+        "options": [
+          { "text": "test-target", "value": "test-target", "selected": true },
+          { "text": "test-target-2", "value": "test-target-2", "selected": false }
+        ],
+        "includeAll": false,
+        "multi": false
+      }
+    ]
+  },
+  "panels": [
+    {
+      "id": 1,
+      "title": "Console — $server",
+      "type": "sparkanswers-viewport-panel",
+      "gridPos": { "h": 14, "w": 16, "x": 0, "y": 0 },
+      "options": {
+        "mode": "host",
+        "connection": "",
+        "host": "${server}",
+        "port": 0,
+        "profile": "linux-vnc",
+        "autoConnect": true,
+        "readOnly": false
+      },
+      "fieldConfig": { "defaults": {}, "overrides": [] }
+    },
+    {
+      "id": 2,
+      "title": "How this works",
+      "type": "text",
+      "gridPos": { "h": 14, "w": 8, "x": 16, "y": 0 },
+      "options": {
+        "mode": "markdown",
+        "content": "## Fleet drill-down\n\nThe **Server** dropdown above is a plain dashboard variable. The Viewport panel runs in **host mode**: it receives `${server}` as the hostname and the `linux-vnc` **credential profile** supplies the protocol, port, and shared credential.\n\nPick a different server and the panel reconnects to it automatically — no per-machine configuration, and no credentials anywhere in this dashboard's JSON.\n\nThe profile's `allowedHosts` list (`test-target*`) restricts which hosts the shared credential may be used against.",
+        "code": { "language": "plaintext", "showLineNumbers": false, "showMiniMap": false }
+      },
+      "fieldConfig": { "defaults": {}, "overrides": [] }
+    }
+  ],
+  "preload": false,
+  "refresh": "",
+  "schemaVersion": 41,
+  "tags": ["viewport", "demo"],
+  "time": { "from": "now-6h", "to": "now" },
+  "timepicker": {},
+  "timezone": "browser",
+  "title": "Fleet Drill-Down - VNC Consoles",
+  "uid": "viewport-fleet",
+  "version": 1
+}

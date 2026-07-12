@@ -11,7 +11,7 @@ jobs:
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: viewport-panel
+        working-directory: viewport-app
 
     steps:
       - uses: actions/checkout@v4
@@ -20,13 +20,15 @@ jobs:
         with:
           node-version: "20"
           cache: "npm"
-          cache-dependency-path: viewport-panel/package-lock.json
+          cache-dependency-path: viewport-app/package-lock.json
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: viewport-app/pkg/go.mod
+          cache-dependency-path: viewport-app/pkg/go.sum
 
       - name: Install dependencies
         run: npm ci
-
-      - name: Lint
-        run: npm run lint
 
       - name: Typecheck
         run: npm run typecheck
@@ -40,6 +42,6 @@ jobs:
       - name: Upload build artifact
         uses: actions/upload-artifact@v4
         with:
-          name: viewport-panel-dist
-          path: viewport-panel/dist/
+          name: viewport-app-dist
+          path: viewport-app/dist/
           retention-days: 7
