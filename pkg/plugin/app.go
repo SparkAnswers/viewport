@@ -165,7 +165,7 @@ func (a *App) handleSession(w http.ResponseWriter, r *http.Request) {
 	}
 
 	login := ""
-	if u := httpadapter.UserFromContext(r.Context()); u != nil {
+	if u := backend.UserFromContext(r.Context()); u != nil {
 		login = u.Login
 	}
 
@@ -198,7 +198,7 @@ func (a *App) CheckHealth(ctx context.Context, _ *backend.CheckHealthRequest) (*
 	if err != nil {
 		return healthError(fmt.Sprintf("Guacamole unreachable: %v", err)), nil
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 	if resp.StatusCode != http.StatusOK {
 		return healthError(fmt.Sprintf("Guacamole returned status %d", resp.StatusCode)), nil
 	}

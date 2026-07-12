@@ -44,7 +44,7 @@ func signEncrypt(key, jsonBytes []byte) (string, error) {
 	}
 
 	mac := hmac.New(sha256.New, key)
-	mac.Write(jsonBytes)
+	_, _ = mac.Write(jsonBytes)
 	signed := append(mac.Sum(nil), jsonBytes...)
 
 	padded := pkcs7Pad(signed, block.BlockSize())
@@ -137,7 +137,7 @@ func (g *guacClient) createToken(ctx context.Context, blob string) (tokenRespons
 	if err != nil {
 		return tokenResponse{}, fmt.Errorf("guacamole unreachable: %w", err)
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	body, _ := io.ReadAll(io.LimitReader(resp.Body, 1<<20))
 	if resp.StatusCode != http.StatusOK {
@@ -171,7 +171,7 @@ func (g *guacClient) resolveIdentifier(ctx context.Context, dataSource, token, n
 	if err != nil {
 		return name
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 	if resp.StatusCode != http.StatusOK {
 		return name
 	}
